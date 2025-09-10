@@ -2,26 +2,12 @@
 Iterative prediction file without contrastive learning model,
 not iterating all day, but updating to true after multiple iterations to continue iterating
 '''
-import copy
 import torch
 import torch.nn as nn
 import numpy as np
 import random
 import data_pretreatment
 import pandas as pd
-
-
-# Generate negative sample indices corresponding to different indices of three furnace data
-def generate_vectors(n, threshold):
-    vectors = []
-    for _ in range(n):
-        # Generate three different positive integers
-        while True:
-            vec = random.sample(range(1, threshold + 1), 3)
-            if len(set(vec)) == 3:
-                break
-        vectors.append(vec)
-    return vectors
 
 
 # Define fully connected neural network model prediction model class
