@@ -4,21 +4,7 @@ PINN network training
 import torch
 import torch.nn as nn
 import numpy as np
-import random
 import data_pretreatment
-
-
-
-# ##Generate negative sample indices corresponding to different indices of three furnace data
-def generate_vectors(n, threshold):
-    vectors = []
-    for _ in range(n):  # Generate three different positive integers
-        while True:
-            vec = random.sample(range(1, threshold + 1), 3)
-            if len(set(vec)) == 3:
-                break
-        vectors.append(vec)
-    return vectors
 
 
 # Comparative Learning Network
