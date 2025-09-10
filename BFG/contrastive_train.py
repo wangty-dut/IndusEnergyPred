@@ -10,16 +10,6 @@ import random
 import data_pretreatment
 import torch.nn.functional as F
 
-# Generate negative sample indices corresponding to different indices of three furnace data
-def generate_vectors(n, threshold):
-    vectors = []
-    for _ in range(n):
-        while True:
-            vec = random.sample(range(1, threshold + 1), 3)
-            if len(set(vec)) == 3:
-                break
-        vectors.append(vec)
-    return vectors
 
 # Comparative Learning Network Definition
 class Contrastive_model(nn.Module):
@@ -56,6 +46,7 @@ class Contrastive_model(nn.Module):
                 if m.bias is not None:
                     nn.init.constant_(m.bias, 0.0)
 
+
 # Define fully connected neural network model prediction model class
 class MLP(nn.Module):
     def __init__(self, width_dim, depth, state_dim, action_dim):
@@ -80,6 +71,7 @@ class MLP(nn.Module):
                 nn.init.xavier_normal_(m.weight)
                 if m.bias is not None:
                     nn.init.constant_(m.bias, 0.0)
+
 
 class PJCL():
     def __init__(self, width_dim_c, depth_c, state_dim_c, action_dim_c, data_np, mean, std):
@@ -136,8 +128,8 @@ class PJCL():
                 noisy_feature_vectors = data_np + noise
                 noisy_feature_vectors = np.maximum(noisy_feature_vectors, 0)
                 if flag:
-                    self.data_np[i][j] = data_np/self.mean
-                    noisy_feature_vectors = noisy_feature_vectors/self.mean
+                    self.data_np[i][j] = data_np / self.mean
+                    noisy_feature_vectors = noisy_feature_vectors / self.mean
                 self.data_np[i].append(copy.deepcopy(noisy_feature_vectors))
 
     # Output the data and enhanced data of three furnaces on a certain day in the same format and shape
@@ -148,7 +140,8 @@ class PJCL():
         return new_data
 
     # Comparative loss calculation
-    def get_loss(self, old_feature1, old_feature1_, old_feature2, old_feature2_, old_feature3, old_feature3_, old_feature4, old_feature4_, temper_p = 100):
+    def get_loss(self, old_feature1, old_feature1_, old_feature2, old_feature2_, old_feature3, old_feature3_,
+                 old_feature4, old_feature4_, temper_p=100):
         min_length12 = min(old_feature1.size(0), old_feature2.size(0))
         min_length13 = min(old_feature1.size(0), old_feature3.size(0))
         min_length14 = min(old_feature1.size(0), old_feature4.size(0))
@@ -160,42 +153,47 @@ class PJCL():
         neg_sim13 = F.cosine_similarity(old_feature1[:min_length13], old_feature3[:min_length13], dim=1)
         neg_sim14 = F.cosine_similarity(old_feature1[:min_length14], old_feature4[:min_length14], dim=1)
         loss_old1 = -torch.log(torch.exp(torch.mean(post_sim1)) / temper_p / (
-                    torch.exp(torch.mean(neg_sim12)) / temper_p + torch.exp(torch.mean(neg_sim13)) / temper_p + torch.exp(torch.mean(neg_sim14)) / temper_p))
+                torch.exp(torch.mean(neg_sim12)) / temper_p + torch.exp(torch.mean(neg_sim13)) / temper_p + torch.exp(
+            torch.mean(neg_sim14)) / temper_p))
 
         post_sim2 = F.cosine_similarity(old_feature2, old_feature2_, dim=1)
         neg_sim21 = F.cosine_similarity(old_feature2[:min_length12], old_feature1[:min_length12], dim=1)
         neg_sim23 = F.cosine_similarity(old_feature2[:min_length23], old_feature3[:min_length23], dim=1)
         neg_sim24 = F.cosine_similarity(old_feature2[:min_length24], old_feature4[:min_length24], dim=1)
         loss_old2 = -torch.log((torch.mean(post_sim2) / temper_p) / (
-                torch.exp(torch.mean(neg_sim21)) / temper_p + torch.exp(torch.mean(neg_sim23)) / temper_p + torch.exp(torch.mean(neg_sim24)) / temper_p))
+                torch.exp(torch.mean(neg_sim21)) / temper_p + torch.exp(torch.mean(neg_sim23)) / temper_p + torch.exp(
+            torch.mean(neg_sim24)) / temper_p))
 
         post_sim3 = F.cosine_similarity(old_feature3, old_feature3_, dim=1)
         neg_sim31 = F.cosine_similarity(old_feature3[:min_length13], old_feature1[:min_length13], dim=1)
         neg_sim32 = F.cosine_similarity(old_feature3[:min_length23], old_feature2[:min_length23], dim=1)
         neg_sim34 = F.cosine_similarity(old_feature3[:min_length34], old_feature4[:min_length34], dim=1)
         loss_old3 = -torch.log(torch.exp(torch.mean(post_sim3)) / temper_p / (
-                torch.exp(torch.mean(neg_sim31)) / temper_p + torch.exp(torch.mean(neg_sim32)) / temper_p + torch.exp(torch.mean(neg_sim34)) / temper_p))
+                torch.exp(torch.mean(neg_sim31)) / temper_p + torch.exp(torch.mean(neg_sim32)) / temper_p + torch.exp(
+            torch.mean(neg_sim34)) / temper_p))
 
         post_sim4 = F.cosine_similarity(old_feature4, old_feature4_, dim=1)
         neg_sim41 = F.cosine_similarity(old_feature4[:min_length14], old_feature1[:min_length14], dim=1)
         neg_sim42 = F.cosine_similarity(old_feature4[:min_length24], old_feature2[:min_length24], dim=1)
         neg_sim43 = F.cosine_similarity(old_feature4[:min_length34], old_feature3[:min_length34], dim=1)
         loss_old4 = -torch.log(torch.exp(torch.mean(post_sim4)) / temper_p / (
-                torch.exp(torch.mean(neg_sim41)) / temper_p + torch.exp(torch.mean(neg_sim42)) / temper_p + torch.exp(torch.mean(neg_sim43)) / temper_p))
+                torch.exp(torch.mean(neg_sim41)) / temper_p + torch.exp(torch.mean(neg_sim42)) / temper_p + torch.exp(
+            torch.mean(neg_sim43)) / temper_p))
 
-        loss_old = loss_old1+loss_old2+loss_old3+loss_old4
+        loss_old = loss_old1 + loss_old2 + loss_old3 + loss_old4
         print(f"post_sim1:{torch.mean(post_sim1)} neg_sim12:{torch.mean(neg_sim12)}")
 
         return loss_old, [torch.mean(post_sim1), torch.mean(neg_sim12), torch.mean(neg_sim13), torch.mean(neg_sim14)], \
-               [torch.mean(post_sim2), torch.mean(neg_sim21), torch.mean(neg_sim23), torch.mean(neg_sim24)], \
-               [torch.mean(post_sim3), torch.mean(neg_sim31), torch.mean(neg_sim32), torch.mean(neg_sim34)], \
-               [torch.mean(post_sim4), torch.mean(neg_sim41), torch.mean(neg_sim42), torch.mean(neg_sim43)]
+            [torch.mean(post_sim2), torch.mean(neg_sim21), torch.mean(neg_sim23), torch.mean(neg_sim24)], \
+            [torch.mean(post_sim3), torch.mean(neg_sim31), torch.mean(neg_sim32), torch.mean(neg_sim34)], \
+            [torch.mean(post_sim4), torch.mean(neg_sim41), torch.mean(neg_sim42), torch.mean(neg_sim43)]
 
     # Transition processing
-    def prop_jump(self, old_feature1, old_feature1_, old_feature2, old_feature2_, old_feature3, old_feature3_, old_feature4, old_feature4_,
+    def prop_jump(self, old_feature1, old_feature1_, old_feature2, old_feature2_, old_feature3, old_feature3_,
+                  old_feature4, old_feature4_,
                   old1_input, old1_input_, old2_input, old2_input_, old3_input, old3_input_, old4_input, old4_input_):
         # Calculate similarity
-        a = 3 # Transition parameters
+        a = 3  # Transition parameters
         min_length12 = min(old_feature1.size(0), old_feature2.size(0))
         min_length13 = min(old_feature1.size(0), old_feature3.size(0))
         min_length14 = min(old_feature1.size(0), old_feature4.size(0))
@@ -392,13 +390,13 @@ class PJCL():
         out_neg42 = self.encoder_new(negative_samples[3][1])
 
         positive_out = [(out1, out_post10, out_post11, out_post12),
-                            (out2, out_post20, out_post21, out_post22),
-                            (out3, out_post30, out_post31, out_post32),
+                        (out2, out_post20, out_post21, out_post22),
+                        (out3, out_post30, out_post31, out_post32),
                         (out4, out_post40, out_post41, out_post42)]
 
         negative_out = [(out1, out_neg11, out_neg12),
-                            (out2, out_neg21, out_neg22),
-                            (out3, out_neg31, out_neg32),
+                        (out2, out_neg21, out_neg22),
+                        (out3, out_neg31, out_neg32),
                         (out4, out_neg41, out_neg42)]
 
         return positive_out, negative_out
@@ -411,7 +409,7 @@ class PJCL():
         return None
 
     # train
-    def train(self, epoch=100, temper_p1 = 100, temper_p2=100):
+    def train(self, epoch=100, temper_p1=100, temper_p2=100):
         sim_old1_list = []
         sim_old2_list = []
         sim_old3_list = []
@@ -423,7 +421,7 @@ class PJCL():
         losses_old = []
         losses_new = []
         for i in range(epoch):
-            idx = random.randint(1, len(self.data_np)-1)
+            idx = random.randint(1, len(self.data_np) - 1)
             data = self.data_np[idx]
             new_data = self.data_build(data)
 
@@ -444,16 +442,22 @@ class PJCL():
             old_feature3_ = self.encoder_old(old3_input_)
             old_feature4 = self.encoder_old(old4_input)
             old_feature4_ = self.encoder_old(old4_input_)
-            #Build Loss_old and update old encoder
-            loss_old, sim_old1, sim_old2, sim_old3, sim_old4 = self.get_loss(old_feature1, old_feature1_, old_feature2, old_feature2_, old_feature3, old_feature3_, old_feature4, old_feature4_, temper_p1)
+            # Build Loss_old and update old encoder
+            loss_old, sim_old1, sim_old2, sim_old3, sim_old4 = self.get_loss(old_feature1, old_feature1_, old_feature2,
+                                                                             old_feature2_, old_feature3, old_feature3_,
+                                                                             old_feature4, old_feature4_, temper_p1)
             self.optim_old.zero_grad()
             loss_old.backward()
             self.optim_old.step()
             # Probability transition ->redistribution of positive and negative samples
-            positive_samples, negative_samples = self.prop_jump(old_feature1, old_feature1_, old_feature2, old_feature2_, old_feature3, old_feature3_, old_feature4, old_feature4_,
-                                                                old1_input, old1_input_, old2_input, old2_input_, old3_input, old3_input_, old4_input, old4_input_)
+            positive_samples, negative_samples = self.prop_jump(old_feature1, old_feature1_, old_feature2,
+                                                                old_feature2_, old_feature3, old_feature3_,
+                                                                old_feature4, old_feature4_,
+                                                                old1_input, old1_input_, old2_input, old2_input_,
+                                                                old3_input, old3_input_, old4_input, old4_input_)
             # Encoder_new calculation
-            positive_out, negative_out = self.get_new_out(old1_input, old2_input, old3_input, old4_input, positive_samples, negative_samples)
+            positive_out, negative_out = self.get_new_out(old1_input, old2_input, old3_input, old4_input,
+                                                          positive_samples, negative_samples)
             # Building Loss_new
             post1_sim0 = torch.mean(F.cosine_similarity(positive_out[0][0], positive_out[0][1], dim=1).unsqueeze(1))
             post1_sim2 = torch.mean((F.cosine_similarity(positive_out[0][0], positive_out[0][2], dim=1).unsqueeze(1)))
@@ -483,20 +487,24 @@ class PJCL():
             neg4_sim1 = torch.mean(F.cosine_similarity(negative_out[3][0], negative_out[3][1], dim=1).unsqueeze(1))
             neg4_sim2 = torch.mean(F.cosine_similarity(negative_out[3][0], negative_out[3][2], dim=1).unsqueeze(1))
 
-            loss_new1 = -torch.log((torch.exp(post1_sim0)/temper_p2 + torch.exp(post1_sim2)/temper_p2 + torch.exp(post1_sim3)/temper_p2)
-                          /(torch.exp(neg1_sim2)/temper_p2+torch.exp(neg1_sim3)/temper_p2))
+            loss_new1 = -torch.log((torch.exp(post1_sim0) / temper_p2 + torch.exp(post1_sim2) / temper_p2 + torch.exp(
+                post1_sim3) / temper_p2)
+                                   / (torch.exp(neg1_sim2) / temper_p2 + torch.exp(neg1_sim3) / temper_p2))
 
-            loss_new2 = -torch.log((torch.exp(post2_sim0) / temper_p2 + torch.exp(post2_sim1) / temper_p2 + torch.exp(post2_sim3) / temper_p2)
-                        / (torch.exp(neg2_sim1) / temper_p2 + torch.exp(neg2_sim3) / temper_p2))
+            loss_new2 = -torch.log((torch.exp(post2_sim0) / temper_p2 + torch.exp(post2_sim1) / temper_p2 + torch.exp(
+                post2_sim3) / temper_p2)
+                                   / (torch.exp(neg2_sim1) / temper_p2 + torch.exp(neg2_sim3) / temper_p2))
 
-            loss_new3 = -torch.log((torch.exp(post3_sim0) / temper_p2 + torch.exp(post3_sim2) / temper_p2 + torch.exp(post3_sim1) / temper_p2)
-                        / (torch.exp(neg3_sim1) / temper_p2 + torch.exp(neg3_sim2) / temper_p2))
+            loss_new3 = -torch.log((torch.exp(post3_sim0) / temper_p2 + torch.exp(post3_sim2) / temper_p2 + torch.exp(
+                post3_sim1) / temper_p2)
+                                   / (torch.exp(neg3_sim1) / temper_p2 + torch.exp(neg3_sim2) / temper_p2))
 
-            loss_new4 = -torch.log((torch.exp(post4_sim0) / temper_p2 + torch.exp(post4_sim2) / temper_p2 + torch.exp(post4_sim1) / temper_p2)
-                        /(torch.exp(neg4_sim1) / temper_p2 + torch.exp(neg4_sim2) / temper_p2))
+            loss_new4 = -torch.log((torch.exp(post4_sim0) / temper_p2 + torch.exp(post4_sim2) / temper_p2 + torch.exp(
+                post4_sim1) / temper_p2)
+                                   / (torch.exp(neg4_sim1) / temper_p2 + torch.exp(neg4_sim2) / temper_p2))
 
-            #Build Total Loss Training
-            loss_new = loss_new1+loss_new2+loss_new3+loss_new4
+            # Build Total Loss Training
+            loss_new = loss_new1 + loss_new2 + loss_new3 + loss_new4
             self.optim_new.zero_grad()
             loss_new.backward()
             self.optim_new.step()
@@ -514,20 +522,21 @@ class PJCL():
             losses_new.append(loss_new.item())
 
             # Weight sharing
-            if i%30 == 0:
+            if i % 30 == 0:
                 self.encoder_old = self.encoder_new
 
         return sim_new1_list, sim_new2_list, sim_new3_list, sim_new4_list, sim_old1_list, sim_old2_list, sim_old3_list, sim_old4_list, losses_old, losses_new
+
 
 # Retrieve the starting index of each day from the data
 def get_day_idx(data):
     days = []
     days_idx = []
     for i in range(len(data)):
-        if i==0:
+        if i == 0:
             days.append([0])
             continue
-        if(data[i, 0]<data[i-1, 0]):
+        if (data[i, 0] < data[i - 1, 0]):
             days.append([1])
             days_idx.append(i)
         else:
@@ -536,12 +545,14 @@ def get_day_idx(data):
     days_idx = np.array(days_idx)
     return new_data, days_idx
 
+
 def data_segmentation(data, idxs):
     data_list = []
-    for i in range(len(idxs)-1):
-        data_list.append((data[idxs[i]:idxs[i+1], :]).tolist())
+    for i in range(len(idxs) - 1):
+        data_list.append((data[idxs[i]:idxs[i + 1], :]).tolist())
     data_list.append((data[idxs[-1]:, :]).tolist())
     return data_list
+
 
 if __name__ == "__main__":
     ##读取数据
@@ -582,8 +593,7 @@ if __name__ == "__main__":
     features3_norm = new_features3 / mean
     features4_norm = new_features4 / mean
 
-    # 数据准备
-    _, days_1 = get_day_idx(features1[1:, :])  # 前面的new_feature是从第2个开始的，所以这里从1开始
+    _, days_1 = get_day_idx(features1[1:, :])
     _, days_2 = get_day_idx(features2[1:, :])
     _, days_3 = get_day_idx(features3[1:, :])
     _, days_4 = get_day_idx(features4[1:, :])
@@ -597,7 +607,7 @@ if __name__ == "__main__":
     data_list3 = data_segmentation(new_features3, days_idx3)
     data_list4 = data_segmentation(new_features4, days_idx4)
     combined_list = [[row1, row2, row3, row4] for row1, row2, row3, row4 in
-                     zip(data_list1, data_list2, data_list3, data_list4)]  # 数据整合
+                     zip(data_list1, data_list2, data_list3, data_list4)]
     combined_np = [[np.array(row1), np.array(row2), np.array(row3), np.array(row4)] for row1, row2, row3, row4 in
                    zip(data_list1, data_list2, data_list3, data_list4)]
 
@@ -610,11 +620,6 @@ if __name__ == "__main__":
 
     # train a contrastive learning model
     epoch = 300
-    sim_new1_list, sim_new2_list, sim_new3_list, sim_new4_list, sim_old1_list, sim_old2_list, sim_old3_list, sim_old4_list, losses_old, losses_new = contrastive_mjup.train(epoch)
+    sim_new1_list, sim_new2_list, sim_new3_list, sim_new4_list, sim_old1_list, sim_old2_list, sim_old3_list, sim_old4_list, losses_old, losses_new = contrastive_mjup.train(
+        epoch)
     # torch.save(contrastive_mjup.encoder_new.state_dict(), "./model/contrastive_model")
-
-
-
-
-
-
