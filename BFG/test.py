@@ -4,20 +4,9 @@ test
 import torch
 import torch.nn as nn
 import numpy as np
-import random
 import data_pretreatment
 import pandas as pd
 
-# Generate negative sample indices corresponding to different indices of three furnace data
-def generate_vectors(n, threshold):
-    vectors = []
-    for _ in range(n):
-        while True:
-            vec = random.sample(range(1, threshold + 1), 3)
-            if len(set(vec)) == 3:
-                break
-        vectors.append(vec)
-    return vectors
 
 # Definition of Comparative Learning Models
 class Contrastive_model(nn.Module):
@@ -30,7 +19,7 @@ class Contrastive_model(nn.Module):
             layers.append(nn.Linear(width_dim, width_dim))
             layers.append(nn.Tanh())
         self.net = nn.Sequential(*layers)
-        # 添加MLP解码网络
+        # Add MLP decoding network
         mlp_layers = []
         mlp_layers.append(nn.Linear(width_dim, width_dim))
         mlp_layers.append(nn.Tanh())
@@ -53,6 +42,7 @@ class Contrastive_model(nn.Module):
                 nn.init.xavier_normal_(m.weight)
                 if m.bias is not None:
                     nn.init.constant_(m.bias, 0.0)
+
 
 # Define fully connected neural network model prediction model class
 class MLP(nn.Module):
@@ -80,6 +70,7 @@ class MLP(nn.Module):
                 if m.bias is not None:
                     nn.init.constant_(m.bias, 0.0)
 
+
 # Get the starting index
 def get_day_idx(data):
     days = []
@@ -97,13 +88,15 @@ def get_day_idx(data):
     days_idx = np.array(days_idx)
     return new_data, days_idx
 
+
 # data enhancement
 def data_segmentation(data, idxs):
     data_list = []
-    for i in range(len(idxs)-1):
-        data_list.append((data[idxs[i]:idxs[i+1], :]).tolist())
+    for i in range(len(idxs) - 1):
+        data_list.append((data[idxs[i]:idxs[i + 1], :]).tolist())
     data_list.append((data[idxs[-1]:, :]).tolist())
     return data_list
+
 
 # Data transformation
 def data_trans(data_np):
@@ -135,17 +128,20 @@ def data_trans(data_np):
 
     return inputs1, inputs2, inputs3, inputs4
 
+
 # Enhance/standardize the original data
 def data_augmentation(data_np, mean):
     for i in range(len(data_np)):
         for j in range(4):
-            data_np[i][j] = data_np[i][j]/mean
+            data_np[i][j] = data_np[i][j] / mean
     return data_np
+
 
 # Prediction model testing
 def test(inputs, model):
     out = model(inputs)
     return out
+
 
 # save data
 def save_tensors_to_excel(data, file1, file2):
@@ -214,7 +210,7 @@ if __name__ == "__main__":
     data_list3 = data_segmentation(new_features3, days_idx3)
     data_list4 = data_segmentation(new_features4, days_idx4)
     combined_list = [[row1, row2, row3, row4] for row1, row2, row3, row4 in
-                     zip(data_list1, data_list2, data_list3, data_list4)]  # 数据整合
+                     zip(data_list1, data_list2, data_list3, data_list4)]  # data integration
     combined_np = [[np.array(row1), np.array(row2), np.array(row3), np.array(row4)] for row1, row2, row3, row4 in
                    zip(data_list1, data_list2, data_list3, data_list4)]
     data_np = data_augmentation(combined_np, mean)
@@ -245,7 +241,7 @@ if __name__ == "__main__":
     separator = [torch.tensor([0, 0, 0, 0, 0, 0, 0]), torch.tensor([0, 0, 0, 0, 0, 0, 0])]
     for i in range(day_num):
         iter_num = 4
-        window_num = int(min(len(inputs1[i]), len(inputs2[i]), len(inputs3[i]), len(inputs4[i]))/iter_num)
+        window_num = int(min(len(inputs1[i]), len(inputs2[i]), len(inputs3[i]), len(inputs4[i])) / iter_num)
         for j in range(window_num):
             lu1_pred_true_list = []
             lu2_pred_true_list = []
@@ -255,9 +251,9 @@ if __name__ == "__main__":
             lu2_true_list_input = inputs2[i]
             lu3_true_list_input = inputs3[i]
             lu4_true_list_input = inputs4[i]
-            j1 = j*iter_num
-            j2 = j*iter_num
-            j3 = j*iter_num
+            j1 = j * iter_num
+            j2 = j * iter_num
+            j3 = j * iter_num
             j4 = j * iter_num
             lu1_input = lu1_true_list_input[j1]
             lu2_input = lu2_true_list_input[j2]
@@ -267,10 +263,10 @@ if __name__ == "__main__":
             lu2_input_true = lu2_input.clone()
             lu3_input_true = lu3_input.clone()
             lu4_input_true = lu4_input.clone()
-            while max(j1, j2, j3, j4)<iter_num+j*iter_num:
+            while max(j1, j2, j3, j4) < iter_num + j * iter_num:
                 lu1_input_true = lu1_true_list_input[j1]
-                lu1_input_ = lu1_input*mean
-                lu1_input_true_ = lu1_input_true*mean
+                lu1_input_ = lu1_input * mean
+                lu1_input_true_ = lu1_input_true * mean
                 lu1_pred_true_list.append([lu1_input_.clone(), lu1_input_true_.clone()])
                 out1 = test(lu1_input, dnn1)
                 out1_ = out1 * mean[1:5]
@@ -278,8 +274,8 @@ if __name__ == "__main__":
                 lu1_input_[1:5] = out1_
                 lu1_input_[5] = lu1_input_[5] - lu1_input_[1] - 1
                 lu1_input_[6] = lu1_input_[6] - 1
-                lu1_input = lu1_input_/mean
-                j1+=1
+                lu1_input = lu1_input_ / mean
+                j1 += 1
 
                 lu2_input_true = lu2_true_list_input[j2]
                 lu2_input_ = lu2_input * mean
@@ -329,10 +325,10 @@ if __name__ == "__main__":
         lu3_pred_true_lists.append(separator)
         lu4_pred_true_lists.append(separator)
 
-    print('lu1_pred_true_lists:',lu1_pred_true_lists)
-    print('lu2_pred_true_lists:',lu2_pred_true_lists)
-    print('lu3_pred_true_lists:',lu3_pred_true_lists)
-    print('lu4_pred_true_lists:',lu4_pred_true_lists)
+    print('lu1_pred_true_lists:', lu1_pred_true_lists)
+    print('lu2_pred_true_lists:', lu2_pred_true_lists)
+    print('lu3_pred_true_lists:', lu3_pred_true_lists)
+    print('lu4_pred_true_lists:', lu4_pred_true_lists)
 
     # str = 'seg_noco_pinn'
     # str_ = 'segment_result/xiaorong'
@@ -344,13 +340,3 @@ if __name__ == "__main__":
     #                       f"./result/{str_}/true_data3_{str}.xlsx")
     # save_tensors_to_excel(lu4_pred_true_lists, f"./result/{str_}/pred_data4_{str}.xlsx",
     #                       f"./result/{str_}/true_data4_{str}.xlsx")
-
-
-
-
-
-
-
-
-
-
