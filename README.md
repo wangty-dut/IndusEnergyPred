@@ -39,28 +39,8 @@ industrial scenarios containing production process coupling and planning constra
 
 ## Requirements
 Use python 3.8 from Conda
-
-- arch==7.2.0
-- einops==0.8.1
-- fire==0.7.1
-- gin==0.1.006
-- joblib==1.4.2
-- keract==4.5.2
-- mamba_ssm==2.2.5
 - matplotlib==3.7.5
-- minepy==1.2.6
-- nltk==3.9.1
 - numpy==1.24.3
 - pandas==2.0.3
-- reformer_pytorch==1.4.4
-- scikit_learn==1.3.2
-- scipy==1.16.1
-- setuptools==69.5.1
-- sktime==0.38.5
-- statsmodels==0.14.5
-- sympy==1.13.2
-- tensorflow==2.13.0
-- tensorflow_intel==2.13.0
-- tqdm==4.66.5
-- wfdb==4.3.0
+- torch==2.3.0
 
