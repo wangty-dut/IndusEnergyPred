@@ -6,24 +6,8 @@ import torch
 import torch.nn as nn
 import numpy as np
 import random
-import pandas as pd
 import data_pretreatment
-import torch.optim as optim
-import matplotlib.pyplot as plt
 import torch.nn.functional as F
-
-
-# Generate negative sample indices corresponding to different indices of three furnace data
-def generate_vectors(n, threshold):
-    vectors = []
-    for _ in range(n):
-        # Generate three different positive integers
-        while True:
-            vec = random.sample(range(1, threshold + 1), 3)
-            if len(set(vec)) == 3:
-                break
-        vectors.append(vec)
-    return vectors
 
 
 # Comparative Learning Network Definition
@@ -204,7 +188,7 @@ class PJCL():
         b1 = loss_old2
         c1 = loss_old3
         if torch.isnan(loss_old).any():
-            print("数据中包含 NaN")
+            print("The data contains NaN")
         print(f"post_sim1:{torch.mean(post_sim1)} neg_sim12:{torch.mean(neg_sim12)}")
 
         return loss_old, [torch.mean(post_sim1).item(), torch.mean(neg_sim12).item(), torch.mean(neg_sim13).item()], [
