@@ -1,26 +1,12 @@
 '''
 PINN prediction model training
 '''
-import copy
 import torch
 import torch.nn as nn
 import pandas as pd
 import numpy as np
-import random
 import data_pretreatment
-import torch.optim as optim
-import matplotlib.pyplot as plt
-import torch.nn.functional as F
 
-def generate_vectors(n, threshold):
-    vectors = []
-    for _ in range(n):
-        while True:
-            vec = random.sample(range(1, threshold + 1), 3)
-            if len(set(vec)) == 3:
-                break
-        vectors.append(vec)
-    return vectors
 
 # Definition of Comparative Learning Models
 class Contrastive_model(nn.Module):
@@ -33,7 +19,7 @@ class Contrastive_model(nn.Module):
             layers.append(nn.Linear(width_dim, width_dim))
             layers.append(nn.Tanh())
         self.net = nn.Sequential(*layers)
-        # 添加MLP解码网络
+        # Add MLP decoding network
         mlp_layers = []
         mlp_layers.append(nn.Linear(width_dim, width_dim))
         mlp_layers.append(nn.Tanh())
@@ -56,6 +42,7 @@ class Contrastive_model(nn.Module):
                 nn.init.xavier_normal_(m.weight)
                 if m.bias is not None:
                     nn.init.constant_(m.bias, 0.0)
+
 
 # Define fully connected neural network model prediction model class
 class MLP(nn.Module):
@@ -87,10 +74,10 @@ def get_day_idx(data):
     days = []
     days_idx = []
     for i in range(len(data)):
-        if i==0:
+        if i == 0:
             days.append([0])
             continue
-        if(data[i, 0]<data[i-1, 0]):
+        if (data[i, 0] < data[i - 1, 0]):
             days.append([1])
             days_idx.append(i)
         else:
@@ -99,13 +86,15 @@ def get_day_idx(data):
     days_idx = np.array(days_idx)
     return new_data, days_idx
 
+
 # data segmentation
 def data_segmentation(data, idxs):
     data_list = []
-    for i in range(len(idxs)-1):
-        data_list.append((data[idxs[i]:idxs[i+1], :]).tolist())
+    for i in range(len(idxs) - 1):
+        data_list.append((data[idxs[i]:idxs[i + 1], :]).tolist())
     data_list.append((data[idxs[-1]:, :]).tolist())
     return data_list
+
 
 # Data feature transformation
 def data_trans(data_np, n=1):
@@ -119,25 +108,25 @@ def data_trans(data_np, n=1):
         input3 = torch.FloatTensor(data_np[i][2]).requires_grad_()
         input4 = torch.FloatTensor(data_np[i][3]).requires_grad_()
 
-        if n==1:
+        if n == 1:
             input = input1[:-1, :5]
             T = input1[:-1, 5].unsqueeze(1)
             lushu = input1[:-1, 6].unsqueeze(1)
             label = input1[1:, 1:5]
 
-        if n==2:
+        if n == 2:
             input = input2[:-1, :5]
             T = input2[:-1, 5].unsqueeze(1)
             lushu = input2[:-1, 6].unsqueeze(1)
             label = input2[1:, 1:5]
 
-        if n==3:
+        if n == 3:
             input = input3[:-1, :5]
             T = input3[:-1, 5].unsqueeze(1)
             lushu = input3[:-1, 6].unsqueeze(1)
             label = input3[1:, 1:5]
 
-        if n==4:
+        if n == 4:
             input = input4[:-1, :5]
             T = input4[:-1, 5].unsqueeze(1)
             lushu = input4[:-1, 6].unsqueeze(1)
@@ -155,13 +144,15 @@ def data_trans(data_np, n=1):
 
     return inputs, Ts, lushus, labels
 
+
 # Enhance/standardize the original data
 def data_augmentation(data_np, mean):
     for i in range(len(data_np)):
         for j in range(4):
-            data_np[i][j] = data_np[i][j]/mean
+            data_np[i][j] = data_np[i][j] / mean
 
     return data_np
+
 
 # Model forward calculation and loss calculation
 def net_f(x, T, n, y, model, model_c, mean):
@@ -180,7 +171,7 @@ def net_f(x, T, n, y, model, model_c, mean):
     a_n = torch.autograd.grad(out_, n, grad_outputs=torch.ones_like(out_), retain_graph=True, create_graph=True)[0]
     a_w = torch.autograd.grad(out_, width, grad_outputs=torch.ones_like(out_), retain_graph=True, create_graph=True)[0]
     f_1 = a_n * (a_mean.item() / n_mean.item()) + (
-                (T * T_mean.item()) / (2 * n * n_mean.item() * n * n_mean.item()))
+            (T * T_mean.item()) / (2 * n * n_mean.item() * n * n_mean.item()))
     f_2 = a_w * (a_mean / width_mean) - 0.5
 
     criterion = nn.MSELoss()
@@ -188,8 +179,9 @@ def net_f(x, T, n, y, model, model_c, mean):
     loss_pde1 = criterion(f_1, torch.zeros_like(f_1))
     loss_pde2 = criterion(f_2, torch.zeros_like(f_2))
 
-    loss = loss_data*10+loss_pde1+loss_pde2
-    return out, loss, (loss_pde1+loss_pde2)
+    loss = loss_data * 10 + loss_pde1 + loss_pde2
+    return out, loss, (loss_pde1 + loss_pde2)
+
 
 # train
 def train(num_epochs, batch_size, data_np, model, model_c, optimizer, mean, lu_num):
@@ -216,19 +208,20 @@ def train(num_epochs, batch_size, data_np, model, model_c, optimizer, mean, lu_n
             loss.backward(retain_graph=True)
             optimizer.step()
 
-        print(f"Epoch {epoch+1}/{num_epochs}, Loss: {loss.item()}, loss_pde:{loss_pde.item()}")
+        print(f"Epoch {epoch + 1}/{num_epochs}, Loss: {loss.item()}, loss_pde:{loss_pde.item()}")
         loss_list.append(loss.item())
-        if epoch!=0 and epoch%100==0:
-            lr = 0.001/(epoch/100)
+        if epoch != 0 and epoch % 100 == 0:
+            lr = 0.001 / (epoch / 100)
             optimizer = torch.optim.Adam(dnn.parameters(), lr=lr)
 
     return loss_list
+
 
 # test
 def test(batch_size, data_np, model, model_c, lu_num):
     inputs, Ts, lushus, labels = data_trans(data_np, lu_num)
 
-    ##预测模型测试
+    # Prediction model testing
     permutation = torch.randperm(inputs.size(0))
     inputs_shuffled = inputs[permutation]
     labels_shuffled = labels[permutation]
@@ -253,7 +246,7 @@ def test(batch_size, data_np, model, model_c, lu_num):
 
 if __name__ == "__main__":
     lu_num = 3
-    ##读取数据
+    # Read data
     filename1 = "./data/feature_1.xls"
     filename2 = "./data/feature_2.xls"
     filename3 = "./data/feature_3.xls"
@@ -323,7 +316,7 @@ if __name__ == "__main__":
     # Define predictive models
     width_dim_p = 128
     depth_p = 5
-    state_dim_p = width_dim_c+2
+    state_dim_p = width_dim_c + 2
     action_dim_p = 4
     dnn = MLP(width_dim_p, depth_p, state_dim_p, action_dim_p)
 
@@ -333,10 +326,3 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(dnn.parameters(), lr=0.001)
     loss_list = train(epoch_p, batch_size, data_np, dnn, model_c, optimizer, mean, lu_num)
     torch.save(dnn.state_dict(), f'./model/dnn_model_c_pde_{lu_num}')
-
-
-
-
-
-
-
