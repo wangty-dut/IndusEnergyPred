@@ -1,5 +1,5 @@
 '''
-Function: Preprocess the features extracted by Matlab
+data preprocessing
 '''
 import numpy
 import numpy as np
@@ -156,3 +156,4 @@ def get_T_num(data):
     new_data = new_data[:idx, :]
 
     return new_data
+
