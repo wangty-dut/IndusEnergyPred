@@ -1,6 +1,4 @@
-'''
-data preprocessing
-'''
+# data preprocessing
 import numpy as np
 
 def get_T_num(data):
@@ -26,20 +24,20 @@ def get_T_num(data):
     new_data = np.concatenate((new_data, num_np), axis=1)
 
     Time = 0
-    lushu = 0
+    heat_number = 0
     flag = 1
     idx = 0
     for i in range(1, len(new_data) + 1):
         if new_data[-i, -1] == 0:
             t = new_data[-i, -2]
-            new_data[-i, -1] = lushu
+            new_data[-i, -1] = heat_number
             new_data[-i, -2] = Time
             Time += t
-            lushu += 1
+            heat_number += 1
         else:
-            new_data[-i, -1] = lushu
+            new_data[-i, -1] = heat_number
             new_data[-i, -2] = Time
-            lushu = 0
+            heat_number = 0
             Time = 0
             if flag:
                 idx = len(new_data) - i
@@ -47,4 +45,3 @@ def get_T_num(data):
     new_data = new_data[:idx, :]
 
     return new_data
-
