@@ -114,7 +114,7 @@ class PJCL():
             for j in range(cols):
                 similarity = similarity_matrix[i, j]
                 prob = self.increasing_function(similarity, a)
-                # 使用随机抽样决定是否跃迁
+                # Using random sampling to determine whether to transition
                 if torch.rand(1).item() < prob:
                     transition_matrix[i, j] = 1
         return transition_matrix
@@ -623,3 +623,4 @@ if __name__ == "__main__":
     sim_new1_list, sim_new2_list, sim_new3_list, sim_new4_list, sim_old1_list, sim_old2_list, sim_old3_list, sim_old4_list, losses_old, losses_new = contrastive_mjup.train(
         epoch)
     # torch.save(contrastive_mjup.encoder_new.state_dict(), "./model/contrastive_model")
+
