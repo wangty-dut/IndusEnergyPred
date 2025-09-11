@@ -23,6 +23,7 @@ project_root/
 │ ├── pinn_train.py
 │ ├── test.py
 │
+│── requirements.txt
 └── README.md
 ```
 
@@ -40,6 +41,7 @@ pip install -r requirements.txt
 
 ## run steps
 Taking the  **BFG experiment** as an example, the running sequence is as follows:
+
 1.Comparative Learning Network Training
 ```bash
 python BFG/contrastive.py
