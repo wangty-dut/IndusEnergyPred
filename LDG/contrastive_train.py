@@ -196,7 +196,7 @@ class PJCL():
             torch.mean(post_sim3).item(), torch.mean(neg_sim31).item(), torch.mean(neg_sim32).item()]
 
     def prop_jump(self, old_feature1, old_feature1_, old_feature2, old_feature2_, old_feature3, old_feature3_,
-                  old1_input, old1_input_, old2_input, old2_input_, old3_input, old3_input_, tongji_flag):
+                  old1_input, old1_input_, old2_input, old2_input_, old3_input, old3_input_, statistics_flag):
         # Statistical transition situation
         post1 = len(old_feature1)
         post2 = len(old_feature2)
@@ -235,29 +235,29 @@ class PJCL():
         num2 = (num_23 + num_21)
         num3 = (num_31 + num_32)
 
-        def get_tongji_sim_pinlv(yueqianlist):
+        def get_statistics_sim_pinlv(yueqianlist):
             '''
             Statistically analyze the distribution of eligible items in the yueqianlist
             '''
             # Initialize statistical list
-            tongji = [0] * 10
+            statistics = [0] * 10
             # Traverse the yueqianlist and count the data that meets the criteria
             for item in yueqianlist:
                 if item[2] == 1:  # Check if the third element is 1
                     index = int(item[1] * 10)  # Calculate interval index
                     if 0 <= index < 10:  # Ensure that the index is within range
-                        tongji[index] += 1
-            return tongji
+                        statistics[index] += 1
+            return statistics
 
-        tongji = []
-        if tongji_flag:
-            tongji21 = get_tongji_sim_pinlv(yueqian21)
-            tongji31 = get_tongji_sim_pinlv(yueqian31)
-            tongji12 = get_tongji_sim_pinlv(yueqian12)
-            tongji32 = get_tongji_sim_pinlv(yueqian32)
-            tongji13 = get_tongji_sim_pinlv(yueqian13)
-            tongji23 = get_tongji_sim_pinlv(yueqian23)
-            tongji = [tongji21, tongji31, tongji12, tongji32, tongji13, tongji23]
+        statistics = []
+        if statistics_flag:
+            statistics21 = get_statistics_sim_pinlv(yueqian21)
+            statistics31 = get_statistics_sim_pinlv(yueqian31)
+            statistics12 = get_statistics_sim_pinlv(yueqian12)
+            statistics32 = get_statistics_sim_pinlv(yueqian32)
+            statistics13 = get_statistics_sim_pinlv(yueqian13)
+            statistics23 = get_statistics_sim_pinlv(yueqian23)
+            statistics = [statistics21, statistics31, statistics12, statistics32, statistics13, statistics23]
 
         # Preparation of positive and negative samples
         post2_1 = copy.deepcopy(old1_input_.detach())
@@ -341,7 +341,7 @@ class PJCL():
                             (neg1_2, neg3_2),
                             (neg1_3, neg2_3)]
 
-        return positive_samples, negative_samples, [prob1.item(), prob2.item(), prob3.item()], tongji, [num1.item(),
+        return positive_samples, negative_samples, [prob1.item(), prob2.item(), prob3.item()], statistics, [num1.item(),
                                                                                                         num2.item(),
                                                                                                         num3.item()]
 
@@ -415,10 +415,10 @@ class PJCL():
         losses_old = []
         losses_new = []
         prob_lists = []
-        tongji = []
+        statistics = []
         num_list = []
         batchsize = 6
-        tongji_flag = 0
+        statistics_flag = 0
         for i in range(epoch):
             # Building data for three furnaces on a certain day
             idx_list = random.sample(range(1, len(self.data_np)), batchsize)
@@ -451,8 +451,8 @@ class PJCL():
             self.optim_old.step()
             # Probability transition ->redistribution of positive and negative samples
             if i == epoch - 1:
-                tongji_flag = 1
-            positive_samples, negative_samples, prob_list, tongji, num = self.prop_jump(old_feature1, old_feature1_,
+                statistics_flag = 1
+            positive_samples, negative_samples, prob_list, statistics, num = self.prop_jump(old_feature1, old_feature1_,
                                                                                         old_feature2, old_feature2_,
                                                                                         old_feature3, old_feature3_,
                                                                                         old1_input, old1_input_,
@@ -512,7 +512,7 @@ class PJCL():
             prob_lists.append(prob_list)
             num_list.append(num)
 
-        return sim_new1_list, sim_new2_list, sim_new3_list, sim_old1_list, sim_old2_list, sim_old3_list, losses_old, losses_new, prob_lists, tongji, num_list
+        return sim_new1_list, sim_new2_list, sim_new3_list, sim_old1_list, sim_old2_list, sim_old3_list, losses_old, losses_new, prob_lists, statistics, num_list
 
 
 def calculate_errors(y_true, y_pred):
@@ -592,5 +592,5 @@ if __name__ == "__main__":
     contrastive_mjup = PJCL(width_dim_c, depth_c, state_dim_c, action_dim_c, combined_np, mean, std)
     # Training contrastive learning models
     epoch = 50
-    sim_new1_list, sim_new2_list, sim_new3_list, sim_old1_list, sim_old2_list, sim_old3_list, losses_old, losses_new, prob_lists, tongji, num_list = \
+    sim_new1_list, sim_new2_list, sim_new3_list, sim_old1_list, sim_old2_list, sim_old3_list, losses_old, losses_new, prob_lists, statistics, num_list = \
         contrastive_mjup.train(epoch)
