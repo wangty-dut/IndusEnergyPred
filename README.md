@@ -1,46 +1,59 @@
-<div align="center">
-  <h2><b> An Industrial Energy Prediction Method Integrating Planning Information and Process Correlation Characteristics </b></h2>
-</div>
+# 🔬 An Industrial Energy Prediction Method Integrating Planning Information and Process Correlation Characteristics
+This repository is the code implementation of the paper **"An Industrial Energy Prediction Method Integrating Planning Information and Process Correlation Characteristics"**.
+## Project Introduction
+This project includes experimental code for two sets of data, **BFG** and **LDG**, which are stored in separate folders.   
+The experiment mainly includes the following modules:
+- **data augmentation**  
+- **Comparative learning and training**  
+- **PINN training**  
+- **test**  
 
-<div align="center">
+## file structure
+```plaintext
+project_root/
+│── BFG/ # BFG Experimental code
+│ ├── data_aug.py # data augmentation
+│ ├── contrastive.py # Comparative learning and training
+│ ├── pinn_train.py # PINN training
+│ ├── test.py # test
+│
+│── LDG/ # LDG Experimental code
+│ ├── data_aug.py
+│ ├── contrastive.py
+│ ├── pinn_train.py
+│ ├── test.py
+│
+└── README.md
+```
 
-
-
-</div>
-
-<div align="center">
-
-
-</div>
-
-<p align="center">
-
-
-## Introduction
-
-An accurate prediction of energy production and consumption is a prerequisite for realizing reasonable energy 
-scheduling in process industry. However, under the conditions of production-energy coupling, the energy operating
-status is highly related to production rhythm. Many prediction methods are unable to consider the impact of 
-multi-production process correlation and planning constraints on energy data fluctuations. To tackle this problem, 
-an industrial energy prediction method integrating plan and multi-dimensional data correlation is proposed. 
-A data augmentation method based on wavelet matching is developed to extract specific features of the energy data 
-and obtain augmented samples. To capture the alternating operation characteristics of different production processes, 
-a contrastive learning (CL) method with probability jumping is developed that takes the process uncertainty into 
-consideration. On this basis, the planning information are represented in a novel form of partial differential 
-equations (PDEs), so that the global production information can be embedded as a priori knowledge by a physics-informed
-neural network (PINN) to achieve a dynamic energy prediction. In order to validate the effectiveness of the proposed
-method, experiments are conducted using energy data from a steel company and compared with a variety of 
-state-of-the-art methods. The results verify that the proposed method achieves better prediction results in complex 
-industrial scenarios containing production process coupling and planning constraints.
-<p align="center">
-<img src="./figures/framework.png" height = "360" alt="" align=center />
-</p>
-
-
-## Requirements
-Use python 3.8 from Conda
+## Environmental Requirements
+- Python 3.8
 - matplotlib==3.7.5
 - numpy==1.24.3
 - pandas==2.0.3
 - torch==2.3.0
 
+Other dependencies can be installed using the following command:
+```bash
+pip install -r requirements.txt
+```
+
+## run steps
+Taking the  **BFG experiment** as an example, the running sequence is as follows:
+1.Comparative Learning Network Training
+```bash
+python BFG/contrastive.py
+```
+2.PINN network training
+```bash
+python BFG/pinn_train.py
+```
+3.test
+```bash
+python BFG/test.py
+```
+The LDG experiment is the same, just run the corresponding script in the ```LDG/``` folder.
+
+## Contact Information
+If you have any questions about the code or experiment, please contact
+Email:  wangty@dlut.edu.cn Thank you
