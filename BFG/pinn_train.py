@@ -100,7 +100,7 @@ def data_segmentation(data, idxs):
 def data_trans(data_np, n=1):
     inputs = []
     Ts = []
-    lushus = []
+    heat_numbers = []
     labels = []
     for i in range(len(data_np)):
         input1 = torch.FloatTensor(data_np[i][0]).requires_grad_()
@@ -111,38 +111,38 @@ def data_trans(data_np, n=1):
         if n == 1:
             input = input1[:-1, :5]
             T = input1[:-1, 5].unsqueeze(1)
-            lushu = input1[:-1, 6].unsqueeze(1)
+            heat_number = input1[:-1, 6].unsqueeze(1)
             label = input1[1:, 1:5]
 
         if n == 2:
             input = input2[:-1, :5]
             T = input2[:-1, 5].unsqueeze(1)
-            lushu = input2[:-1, 6].unsqueeze(1)
+            heat_number = input2[:-1, 6].unsqueeze(1)
             label = input2[1:, 1:5]
 
         if n == 3:
             input = input3[:-1, :5]
             T = input3[:-1, 5].unsqueeze(1)
-            lushu = input3[:-1, 6].unsqueeze(1)
+            heat_number = input3[:-1, 6].unsqueeze(1)
             label = input3[1:, 1:5]
 
         if n == 4:
             input = input4[:-1, :5]
             T = input4[:-1, 5].unsqueeze(1)
-            lushu = input4[:-1, 6].unsqueeze(1)
+            heat_number = input4[:-1, 6].unsqueeze(1)
             label = input4[1:, 1:5]
 
         inputs.append(input.clone())
         Ts.append(T.clone())
-        lushus.append(lushu.clone())
+        heat_numbers.append(heat_number.clone())
         labels.append(label.clone())
 
     inputs = torch.cat(inputs, dim=0)
     Ts = torch.cat(Ts, dim=0)
-    lushus = torch.cat(lushus, dim=0)
+    heat_numbers = torch.cat(heat_numbers, dim=0)
     labels = torch.cat(labels, dim=0)
 
-    return inputs, Ts, lushus, labels
+    return inputs, Ts, heat_numbers, labels
 
 
 # Enhance/standardize the original data
@@ -186,13 +186,13 @@ def net_f(x, T, n, y, model, model_c, mean):
 # train
 def train(num_epochs, batch_size, data_np, model, model_c, optimizer, mean, lu_num):
     loss_list = []
-    inputs, Ts, lushus, labels = data_trans(data_np, lu_num)
+    inputs, Ts, heat_numbers, labels = data_trans(data_np, lu_num)
     for epoch in range(num_epochs):
         permutation = torch.randperm(inputs.size(0))
         inputs_shuffled = inputs[permutation]
         labels_shuffled = labels[permutation]
         Ts_shuffled = Ts[permutation]
-        lushus_shuffled = lushus[permutation]
+        heat_numbers_shuffled = heat_numbers[permutation]
 
         num_batches = inputs.size(0) // batch_size
         for batch_index in range(num_batches):
@@ -200,10 +200,10 @@ def train(num_epochs, batch_size, data_np, model, model_c, optimizer, mean, lu_n
             end_index = (batch_index + 1) * batch_size
             batch_inputs = inputs_shuffled[start_index:end_index]
             T_inputs = Ts_shuffled[start_index:end_index]
-            lushu_inputs = lushus_shuffled[start_index:end_index]
+            heat_number_inputs = heat_numbers_shuffled[start_index:end_index]
             batch_labels = labels_shuffled[start_index:end_index]
 
-            out, loss, loss_pde = net_f(batch_inputs, T_inputs, lushu_inputs, batch_labels, model, model_c, mean)
+            out, loss, loss_pde = net_f(batch_inputs, T_inputs, heat_number_inputs, batch_labels, model, model_c, mean)
             optimizer.zero_grad()
             loss.backward(retain_graph=True)
             optimizer.step()
@@ -219,27 +219,27 @@ def train(num_epochs, batch_size, data_np, model, model_c, optimizer, mean, lu_n
 
 # test
 def test(batch_size, data_np, model, model_c, lu_num):
-    inputs, Ts, lushus, labels = data_trans(data_np, lu_num)
+    inputs, Ts, heat_numbers, labels = data_trans(data_np, lu_num)
 
     # Prediction model testing
     permutation = torch.randperm(inputs.size(0))
     inputs_shuffled = inputs[permutation]
     labels_shuffled = labels[permutation]
     Ts_shuffled = Ts[permutation]
-    lushus_shuffled = lushus[permutation]
+    heat_numbers_shuffled = heat_numbers[permutation]
 
     start_index = 1 * batch_size
     end_index = (1 + 1) * batch_size
     batch_inputs = inputs_shuffled[start_index:end_index]
     T_inputs = Ts_shuffled[start_index:end_index]
-    lushu_inputs = lushus_shuffled[start_index:end_index]
+    heat_number_inputs = heat_numbers_shuffled[start_index:end_index]
     batch_labels = labels_shuffled[start_index:end_index]
 
     time_feature = batch_inputs[:, 0].reshape(-1, 1)
     width = batch_inputs[:, 1].reshape(-1, 1)
     feature = batch_inputs[:, 2:5]
     feature_h = model_c.get_feature_core(torch.cat((time_feature, width, feature), dim=1))
-    out = model(torch.cat([feature_h, T_inputs, lushu_inputs], dim=1))
+    out = model(torch.cat([feature_h, T_inputs, heat_number_inputs], dim=1))
 
     return out, batch_labels
 
@@ -303,7 +303,7 @@ if __name__ == "__main__":
     combined_np = [[np.array(row1), np.array(row2), np.array(row3), np.array(row4)] for row1, row2, row3, row4 in
                    zip(data_list1, data_list2, data_list3, data_list4)]
     data_np = data_augmentation(combined_np, mean)
-    inputs, Ts, lushus, labels = data_trans(data_np, lu_num)
+    inputs, Ts, heat_numbers, labels = data_trans(data_np, lu_num)
 
     # Define contrastive learning models
     width_dim_c = 56
