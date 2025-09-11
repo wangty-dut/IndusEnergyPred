@@ -555,7 +555,7 @@ def data_segmentation(data, idxs):
 
 
 if __name__ == "__main__":
-    ##读取数据
+    # Read data
     filename1 = "./data/feature_1.xls"
     filename2 = "./data/feature_2.xls"
     filename3 = "./data/feature_3.xls"
@@ -623,4 +623,5 @@ if __name__ == "__main__":
     sim_new1_list, sim_new2_list, sim_new3_list, sim_new4_list, sim_old1_list, sim_old2_list, sim_old3_list, sim_old4_list, losses_old, losses_new = contrastive_mjup.train(
         epoch)
     # torch.save(contrastive_mjup.encoder_new.state_dict(), "./model/contrastive_model")
+
 
