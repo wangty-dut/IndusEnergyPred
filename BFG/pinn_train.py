@@ -184,9 +184,9 @@ def net_f(x, T, n, y, model, model_c, mean):
 
 
 # train
-def train(num_epochs, batch_size, data_np, model, model_c, optimizer, mean, lu_num):
+def train(num_epochs, batch_size, data_np, model, model_c, optimizer, mean, heat_num):
     loss_list = []
-    inputs, Ts, heat_numbers, labels = data_trans(data_np, lu_num)
+    inputs, Ts, heat_numbers, labels = data_trans(data_np, heat_num)
     for epoch in range(num_epochs):
         permutation = torch.randperm(inputs.size(0))
         inputs_shuffled = inputs[permutation]
@@ -218,8 +218,8 @@ def train(num_epochs, batch_size, data_np, model, model_c, optimizer, mean, lu_n
 
 
 # test
-def test(batch_size, data_np, model, model_c, lu_num):
-    inputs, Ts, heat_numbers, labels = data_trans(data_np, lu_num)
+def test(batch_size, data_np, model, model_c, heat_num):
+    inputs, Ts, heat_numbers, labels = data_trans(data_np, heat_num)
 
     # Prediction model testing
     permutation = torch.randperm(inputs.size(0))
@@ -245,7 +245,7 @@ def test(batch_size, data_np, model, model_c, lu_num):
 
 
 if __name__ == "__main__":
-    lu_num = 3
+    heat_num = 3
     # Read data
     filename1 = "./data/feature_1.xls"
     filename2 = "./data/feature_2.xls"
@@ -303,7 +303,7 @@ if __name__ == "__main__":
     combined_np = [[np.array(row1), np.array(row2), np.array(row3), np.array(row4)] for row1, row2, row3, row4 in
                    zip(data_list1, data_list2, data_list3, data_list4)]
     data_np = data_augmentation(combined_np, mean)
-    inputs, Ts, heat_numbers, labels = data_trans(data_np, lu_num)
+    inputs, Ts, heat_numbers, labels = data_trans(data_np, heat_num)
 
     # Define contrastive learning models
     width_dim_c = 56
@@ -324,5 +324,5 @@ if __name__ == "__main__":
     epoch_p = 1000
     batch_size = 200
     optimizer = torch.optim.Adam(dnn.parameters(), lr=0.001)
-    loss_list = train(epoch_p, batch_size, data_np, dnn, model_c, optimizer, mean, lu_num)
-    torch.save(dnn.state_dict(), f'./model/dnn_model_c_pde_{lu_num}')
+    loss_list = train(epoch_p, batch_size, data_np, dnn, model_c, optimizer, mean, heat_num)
+    torch.save(dnn.state_dict(), f'./model/dnn_model_c_pde_{heat_num}')
