@@ -89,7 +89,7 @@ def get_day_idx(data):
     return new_data, days_idx
 
 
-# data enhancement
+# Split the data into multiple sub fragments according to the given index list idxs
 def data_segmentation(data, idxs):
     data_list = []
     for i in range(len(idxs) - 1):
@@ -129,7 +129,7 @@ def data_trans(data_np):
     return inputs1, inputs2, inputs3, inputs4
 
 
-# Enhance/standardize the original data
+# standardize the original data
 def data_augmentation(data_np, mean):
     for i in range(len(data_np)):
         for j in range(4):
@@ -175,11 +175,13 @@ if __name__ == "__main__":
     features3 = data3[:, :5]
     features4 = data4[:, :5]
 
+    # Return a new dataset with furnace number and remaining duration
     new_features1 = data_pretreatment.get_T_num(features1)
     new_features2 = data_pretreatment.get_T_num(features2)
     new_features3 = data_pretreatment.get_T_num(features3)
     new_features4 = data_pretreatment.get_T_num(features4)
 
+    # normalization
     mean1 = new_features1.mean(axis=0)
     mean2 = new_features2.mean(axis=0)
     mean3 = new_features3.mean(axis=0)
@@ -233,110 +235,135 @@ if __name__ == "__main__":
 
     # Iterative prediction testing
     mean = torch.FloatTensor(mean)
-    lu1_pred_true_lists = []
-    lu2_pred_true_lists = []
-    lu3_pred_true_lists = []
-    lu4_pred_true_lists = []
+    # Lists to store prediction vs. ground truth results for 4 units (heat1–heat4)
+    heat1_pred_true_lists = []
+    heat2_pred_true_lists = []
+    heat3_pred_true_lists = []
+    heat4_pred_true_lists = []
+    # number of days (data is grouped by day)
     day_num = len(inputs1)
+    # Zero tensor separator (used when concatenating results later)
     separator = [torch.tensor([0, 0, 0, 0, 0, 0, 0]), torch.tensor([0, 0, 0, 0, 0, 0, 0])]
     for i in range(day_num):
-        iter_num = 4
-        window_num = int(min(len(inputs1[i]), len(inputs2[i]), len(inputs3[i]), len(inputs4[i])) / iter_num)
+        iter_num = 4 # number of iterative prediction steps within each window
+        window_num = int(min(len(inputs1[i]), len(inputs2[i]), len(inputs3[i]), len(inputs4[i])) / iter_num) # number of windows per day (use the shortest among 4 input series)
         for j in range(window_num):
-            lu1_pred_true_list = []
-            lu2_pred_true_list = []
-            lu3_pred_true_list = []
-            lu4_pred_true_list = []
-            lu1_true_list_input = inputs1[i]
-            lu2_true_list_input = inputs2[i]
-            lu3_true_list_input = inputs3[i]
-            lu4_true_list_input = inputs4[i]
+            # Temporary lists to store predictions and ground truth for the current window
+            heat1_pred_true_list = []
+            heat2_pred_true_list = []
+            heat3_pred_true_list = []
+            heat4_pred_true_list = []
+            # Ground truth sequences for this day
+            heat1_true_list_input = inputs1[i]
+            heat2_true_list_input = inputs2[i]
+            heat3_true_list_input = inputs3[i]
+            heat4_true_list_input = inputs4[i]
+            # Initialize starting indices for the current window
             j1 = j * iter_num
             j2 = j * iter_num
             j3 = j * iter_num
             j4 = j * iter_num
-            lu1_input = lu1_true_list_input[j1]
-            lu2_input = lu2_true_list_input[j2]
-            lu3_input = lu3_true_list_input[j3]
-            lu4_input = lu4_true_list_input[j4]
-            lu1_input_true = lu1_input.clone()
-            lu2_input_true = lu2_input.clone()
-            lu3_input_true = lu3_input.clone()
-            lu4_input_true = lu4_input.clone()
-            while max(j1, j2, j3, j4) < iter_num + j * iter_num:
-                lu1_input_true = lu1_true_list_input[j1]
-                lu1_input_ = lu1_input * mean
-                lu1_input_true_ = lu1_input_true * mean
-                lu1_pred_true_list.append([lu1_input_.clone(), lu1_input_true_.clone()])
-                out1 = test(lu1_input, dnn1)
+            # Initialize model inputs with the first element of the window
+            heat1_input = heat1_true_list_input[j1]
+            heat2_input = heat2_true_list_input[j2]
+            heat3_input = heat3_true_list_input[j3]
+            heat4_input = heat4_true_list_input[j4]
+            # Keep a copy of the true input for comparison
+            heat1_input_true = heat1_input.clone()
+            heat2_input_true = heat2_input.clone()
+            heat3_input_true = heat3_input.clone()
+            heat4_input_true = heat4_input.clone()
+            while max(j1, j2, j3, j4) < iter_num + j * iter_num: # Iterative prediction loop (roll forward within the window)
+                # Get ground truth at current step
+                heat1_input_true = heat1_true_list_input[j1]
+
+                # De-normalize the current input and the ground truth
+                heat1_input_ = heat1_input * mean
+                heat1_input_true_ = heat1_input_true * mean
+
+                # Save prediction input vs. ground truth pair
+                heat1_pred_true_list.append([heat1_input_.clone(), heat1_input_true_.clone()])
+
+                # --- Model prediction step ---
+                out1 = test(heat1_input, dnn1)
                 out1_ = out1 * mean[1:5]
-                lu1_input_[0] = lu1_input_[0] + lu1_input_[1] + 1
-                lu1_input_[1:5] = out1_
-                lu1_input_[5] = lu1_input_[5] - lu1_input_[1] - 1
-                lu1_input_[6] = lu1_input_[6] - 1
-                lu1_input = lu1_input_ / mean
+
+                # --- Update input features for next iteration ---
+                heat1_input_[0] = heat1_input_[0] + heat1_input_[1] + 1 # Update time
+                heat1_input_[1:5] = out1_ # replace features with predicted
+                heat1_input_[5] = heat1_input_[5] - heat1_input_[1] - 1 # remaining duration
+                heat1_input_[6] = heat1_input_[6] - 1 # update heat number
+
+                # Normalize again before feeding into the model in the next step
+                heat1_input = heat1_input_ / mean
+
+                # Move to next time index
                 j1 += 1
 
-                lu2_input_true = lu2_true_list_input[j2]
-                lu2_input_ = lu2_input * mean
-                lu2_input_true_ = lu2_input_true * mean
-                lu2_pred_true_list.append([lu2_input_.clone(), lu2_input_true_.clone()])
-                out2 = test(lu2_input, dnn2)
+                # 2
+                heat2_input_true = heat2_true_list_input[j2]
+                heat2_input_ = heat2_input * mean
+                heat2_input_true_ = heat2_input_true * mean
+                heat2_pred_true_list.append([heat2_input_.clone(), heat2_input_true_.clone()])
+                out2 = test(heat2_input, dnn2)
                 out2_ = out2 * mean[1:5]
-                lu2_input_[0] = lu2_input_[0] + lu2_input_[1] + 1
-                lu2_input_[1:5] = out2_
-                lu2_input_[5] = lu2_input_[5] - lu2_input_[1] - 1
-                lu2_input_[6] = lu2_input_[6] - 1
-                lu2_input = lu2_input_ / mean
+                heat2_input_[0] = heat2_input_[0] + heat2_input_[1] + 1
+                heat2_input_[1:5] = out2_
+                heat2_input_[5] = heat2_input_[5] - heat2_input_[1] - 1
+                heat2_input_[6] = heat2_input_[6] - 1
+                heat2_input = heat2_input_ / mean
                 j2 += 1
-
-                lu3_input_true = lu3_true_list_input[j3]
-                lu3_input_ = lu3_input * mean
-                lu3_input_true_ = lu3_input_true * mean
-                lu3_pred_true_list.append([lu3_input_.clone(), lu3_input_true_.clone()])
-                out3 = test(lu3_input, dnn3)
+                # 3
+                heat3_input_true = heat3_true_list_input[j3]
+                heat3_input_ = heat3_input * mean
+                heat3_input_true_ = heat3_input_true * mean
+                heat3_pred_true_list.append([heat3_input_.clone(), heat3_input_true_.clone()])
+                out3 = test(heat3_input, dnn3)
                 out3_ = out3 * mean[1:5]
-                lu3_input_[0] = lu3_input_[0] + lu3_input_[1] + 1
-                lu3_input_[1:5] = out3_
-                lu3_input_[5] = lu3_input_[5] - lu3_input_[1] - 1
-                lu3_input_[6] = lu3_input_[6] - 1
-                lu3_input = lu3_input_ / mean
+                heat3_input_[0] = heat3_input_[0] + heat3_input_[1] + 1
+                heat3_input_[1:5] = out3_
+                heat3_input_[5] = heat3_input_[5] - heat3_input_[1] - 1
+                heat3_input_[6] = heat3_input_[6] - 1
+                heat3_input = heat3_input_ / mean
                 j3 += 1
-
-                lu4_input_true = lu4_true_list_input[j4]
-                lu4_input_ = lu4_input * mean
-                lu4_input_true_ = lu4_input_true * mean
-                lu4_pred_true_list.append([lu4_input_.clone(), lu4_input_true_.clone()])
-                out4 = test(lu4_input, dnn4)
+                # 4
+                heat4_input_true = heat4_true_list_input[j4]
+                heat4_input_ = heat4_input * mean
+                heat4_input_true_ = heat4_input_true * mean
+                heat4_pred_true_list.append([heat4_input_.clone(), heat4_input_true_.clone()])
+                out4 = test(heat4_input, dnn4)
                 out4_ = out4 * mean[1:5]
-                lu4_input_[0] = lu4_input_[0] + lu4_input_[1] + 1
-                lu4_input_[1:5] = out4_
-                lu4_input_[5] = lu4_input_[5] - lu4_input_[1] - 1
-                lu4_input_[6] = lu4_input_[6] - 1
-                lu4_input = lu4_input_ / mean
+                heat4_input_[0] = heat4_input_[0] + heat4_input_[1] + 1
+                heat4_input_[1:5] = out4_
+                heat4_input_[5] = heat4_input_[5] - heat4_input_[1] - 1
+                heat4_input_[6] = heat4_input_[6] - 1
+                heat4_input = heat4_input_ / mean
                 j4 += 1
 
-            lu1_pred_true_lists += lu1_pred_true_list
-            lu2_pred_true_lists += lu2_pred_true_list
-            lu3_pred_true_lists += lu3_pred_true_list
-            lu4_pred_true_lists += lu4_pred_true_list
-        lu1_pred_true_lists.append(separator)
-        lu2_pred_true_lists.append(separator)
-        lu3_pred_true_lists.append(separator)
-        lu4_pred_true_lists.append(separator)
+            # Collect predictive data
+            heat1_pred_true_lists += heat1_pred_true_list
+            heat2_pred_true_lists += heat2_pred_true_list
+            heat3_pred_true_lists += heat3_pred_true_list
+            heat4_pred_true_lists += heat4_pred_true_list
 
-    print('lu1_pred_true_lists:', lu1_pred_true_lists)
-    print('lu2_pred_true_lists:', lu2_pred_true_lists)
-    print('lu3_pred_true_lists:', lu3_pred_true_lists)
-    print('lu4_pred_true_lists:', lu4_pred_true_lists)
+        # Unified dimension
+        heat1_pred_true_lists.append(separator)
+        heat2_pred_true_lists.append(separator)
+        heat3_pred_true_lists.append(separator)
+        heat4_pred_true_lists.append(separator)
+
+    print('heat1_pred_true_lists:', heat1_pred_true_lists)
+    print('heat2_pred_true_lists:', heat2_pred_true_lists)
+    print('heat3_pred_true_lists:', heat3_pred_true_lists)
+    print('heat4_pred_true_lists:', heat4_pred_true_lists)
 
     # str = 'seg_noco_pinn'
     # str_ = 'segment_result/xiaorong'
-    # save_tensors_to_excel(lu1_pred_true_lists, f"./result/{str_}/pred_data1_{str}.xlsx",
+    # save_tensors_to_excel(heat1_pred_true_lists, f"./result/{str_}/pred_data1_{str}.xlsx",
     #                       f"./result/{str_}/true_data1_{str}.xlsx")
-    # save_tensors_to_excel(lu2_pred_true_lists, f"./result/{str_}/pred_data2_{str}.xlsx",
+    # save_tensors_to_excel(heat2_pred_true_lists, f"./result/{str_}/pred_data2_{str}.xlsx",
     #                       f"./result/{str_}/true_data2_{str}.xlsx")
-    # save_tensors_to_excel(lu3_pred_true_lists, f"./result/{str_}/pred_data3_{str}.xlsx",
+    # save_tensors_to_excel(heat3_pred_true_lists, f"./result/{str_}/pred_data3_{str}.xlsx",
     #                       f"./result/{str_}/true_data3_{str}.xlsx")
-    # save_tensors_to_excel(lu4_pred_true_lists, f"./result/{str_}/pred_data4_{str}.xlsx",
+    # save_tensors_to_excel(heat4_pred_true_lists, f"./result/{str_}/pred_data4_{str}.xlsx",
     #                       f"./result/{str_}/true_data4_{str}.xlsx")
