@@ -3,7 +3,7 @@ This repository is the code implementation of the paper **"An Industrial Energy 
 ## Project Introduction
 This project includes experimental code for two sets of data, **BFG** and **LDG**, which are stored in separate folders.   
 The experiment mainly includes the following modules:
-- **data augmentation**  
+- **data_pretreatment**  
 - **Comparative learning and training**  
 - **PINN training**  
 - **test**  
@@ -12,7 +12,7 @@ The experiment mainly includes the following modules:
 ```plaintext
 project_root/
 │── BFG/ # BFG Experimental code
-│ ├── data_pretreatment.py # data augmentation
+│ ├── data_pretreatment.py # Preprocess the features extracted by Matlab
 │ ├── contrastive_train.py # Comparative learning and training
 │ ├── pinn_train.py # PINN training
 │ ├── test.py # test
