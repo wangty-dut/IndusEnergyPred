@@ -1,6 +1,5 @@
 '''
 Iterative prediction file without contrastive learning model,
-not iterating all day, but updating to true after multiple iterations to continue iterating
 '''
 import torch
 import torch.nn as nn
@@ -190,6 +189,7 @@ if __name__ == "__main__":
     depth_p = 5
     state_dim_p = 5
     action_dim_p = 1
+    Average_LDG_recovery_time = 15
     dnn1 = MLP(width_dim_p, depth_p, state_dim_p, action_dim_p)
     dnn2 = MLP(width_dim_p, depth_p, state_dim_p, action_dim_p)
     dnn3 = MLP(width_dim_p, depth_p, state_dim_p, action_dim_p)
@@ -259,10 +259,10 @@ if __name__ == "__main__":
 
                 # Update input state with predicted values
                 heat1_input_[0] = out1_
-                heat1_input_[1] = heat1_input_[1] + out1_
-                heat1_input_[2] = (out1_ - (heat1_input_[2] / 2 + 15)) * 2
-                heat1_input_[3] = heat1_input_[3] - 15 - heat1_input_[2]
-                heat1_input_[4] = heat1_input_[4] - 1
+                heat1_input_[1] = heat1_input_[1] + out1_ # update the intermediate moment of the gap stage
+                heat1_input_[2] = (out1_ - (heat1_input_[2] / 2 + Average_LDG_recovery_time)) * 2 # Update the duration of the gap phase, 15 represents the average recycling time
+                heat1_input_[3] = heat1_input_[3] - Average_LDG_recovery_time - heat1_input_[2] # Update remaining time
+                heat1_input_[4] = heat1_input_[4] - 1 # Update the remaining number of furnaces
 
                 # Normalize updated state before next iteration
                 heat1_input = heat1_input_ / mean
@@ -279,8 +279,8 @@ if __name__ == "__main__":
                 out2_ = out2 * mean[0]
                 heat2_input_[0] = out2_
                 heat2_input_[1] = heat2_input_[1] + out2_
-                heat2_input_[2] = (out2_ - (heat2_input_[2] / 2 + 15)) * 2
-                heat2_input_[3] = heat2_input_[3] - 15 - heat2_input_[2]
+                heat2_input_[2] = (out2_ - (heat2_input_[2] / 2 + Average_LDG_recovery_time)) * 2
+                heat2_input_[3] = heat2_input_[3] - Average_LDG_recovery_time - heat2_input_[2]
                 heat2_input_[4] = heat2_input_[4] - 1
                 heat2_input = heat2_input_ / mean
                 j2 += 1
@@ -293,8 +293,8 @@ if __name__ == "__main__":
                 out3_ = out3 * mean[0]
                 heat3_input_[0] = out3_
                 heat3_input_[1] = heat3_input_[1] + out3_
-                heat3_input_[2] = (out3_ - (heat3_input_[2] / 2 + 15)) * 2
-                heat3_input_[3] = heat3_input_[3] - 15 - heat3_input_[2]
+                heat3_input_[2] = (out3_ - (heat3_input_[2] / 2 + Average_LDG_recovery_time)) * 2
+                heat3_input_[3] = heat3_input_[3] - Average_LDG_recovery_time - heat3_input_[2]
                 heat3_input_[4] = heat3_input_[4] - 1
                 heat3_input = heat3_input_ / mean
                 j3 += 1
