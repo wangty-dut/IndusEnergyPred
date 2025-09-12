@@ -12,19 +12,19 @@ The experiment mainly includes the following modules:
 ```plaintext
 project_root/
 │── BFG/ # BFG Experimental code
-│ ├── data_aug.py # data augmentation
-│ ├── contrastive.py # Comparative learning and training
+│ ├── data_pretreatment.py # data augmentation
+│ ├── contrastive_train.py # Comparative learning and training
 │ ├── pinn_train.py # PINN training
 │ ├── test.py # test
 │
 │── LDG/ # LDG Experimental code
-│ ├── data_aug.py
-│ ├── contrastive.py
+│ ├── data_pretreatment.py
+│ ├── contrastive_train.py
 │ ├── pinn_train.py
 │ ├── test.py
 │
-│── requirements.txt
-└── README.md
+│── README.md
+└── requirements.txt
 ```
 
 ## Environmental Requirements
@@ -44,7 +44,7 @@ Taking the  **BFG experiment** as an example, the running sequence is as follows
 
 1.Comparative Learning Network Training
 ```bash
-python BFG/contrastive.py
+python BFG/contrastive_train.py
 ```
 2.PINN network training
 ```bash
@@ -58,4 +58,4 @@ The LDG experiment is the same, just run the corresponding script in the ```LDG/
 
 ## Contact Information
 If you have any questions about the code or experiment, please contact
-Email:  wangty@dlut.edu.cn Thank you
+Email:  wangty@dlut.edu.cn. Thanks!
