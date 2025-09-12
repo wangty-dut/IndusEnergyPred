@@ -5,9 +5,9 @@ import copy
 import torch
 import torch.nn as nn
 import numpy as np
-import random
 import data_pretreatment
 import torch.nn.functional as F
+import random
 
 
 # Comparative Learning Network Definition
@@ -580,7 +580,7 @@ if __name__ == "__main__":
     data_list1 = data_segmentation(new_features1, days_idx1)
     data_list2 = data_segmentation(new_features2, days_idx2)
     data_list3 = data_segmentation(new_features3, days_idx3)
-    combined_list = [[row1, row2, row3] for row1, row2, row3 in zip(data_list1, data_list2, data_list3)]  # 数据整合
+    combined_list = [[row1, row2, row3] for row1, row2, row3 in zip(data_list1, data_list2, data_list3)]
     combined_np = [[np.array(row1), np.array(row2), np.array(row3)] for row1, row2, row3 in
                    zip(data_list1, data_list2, data_list3)]
 
@@ -594,3 +594,4 @@ if __name__ == "__main__":
     epoch = 50
     sim_new1_list, sim_new2_list, sim_new3_list, sim_old1_list, sim_old2_list, sim_old3_list, losses_old, losses_new, prob_lists, statistics, num_list = \
         contrastive_mjup.train(epoch)
+    # torch.save(contrastive_mjup.encoder_new.state_dict(), "./model/contrastive_model")
