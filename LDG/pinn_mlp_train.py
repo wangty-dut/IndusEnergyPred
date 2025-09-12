@@ -282,4 +282,4 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(dnn.parameters(), lr=0.001)
     loss_list, loss_pde_list, loss_data_list = train(epoch_p, batch_size, data_np, dnn, model_c, optimizer, mean,
                                                      lu_num)
-    # torch.save(dnn.state_dict(), f'./model/dnn_model_c_pde_{lu_num}')
+    # torch.save(dnn.state_dict(), f'./model/dnn_model_c_pde_{heat_num}')
