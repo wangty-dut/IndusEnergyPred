@@ -3,7 +3,7 @@ This repository is the code implementation of the paper **"An Industrial Energy 
 ## Project Introduction
 This project includes experimental code for two datasets, **BFG** and **LDG**, which are stored in separate folders.   
 The experiment mainly includes the following modules:
-- **data augmentation**  
+- **data augmentation**   (Includes feature enhancement Matlab code and Python code)
 - **contrastive learning**  
 - **PINN training**  
 - **test**  
