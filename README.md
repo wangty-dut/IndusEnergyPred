@@ -4,7 +4,7 @@ This repository is the code implementation of the paper **"An Industrial Energy 
 This project includes experimental code for two datasets, **BFG** and **LDG**, which are stored in separate folders.   
 The experiment mainly includes the following modules:
 - **data augmentation**  
-- **comparative learning**  
+- **contrastive learning**  
 - **PINN training**  
 - **test**  
 - **refactor.m**  
@@ -14,7 +14,7 @@ The experiment mainly includes the following modules:
 project_root/
 │── BFG/ # BFG Experimental code
 │ ├── data_pretreatment.py # data augmentation for feature construction and extraction
-│ ├── contrastive_train.py # comparative learning with jumping module
+│ ├── contrastive_train.py # contrastive learning with jumping module
 │ ├── pinn_train.py # PINN training
 │ ├── test.py # test
 │ ├── refactor.m # Refactor data from the augmented features
