@@ -13,7 +13,7 @@ The experiment mainly includes the following modules:
 ```plaintext
 project_root/
 │── BFG/ # BFG Experimental code
-│ ├── data_pretreatment.py # data augmentation for feature construction and extraction
+│ ├── data_pretreatment.py
 │ ├── contrastive_train.py # contrastive learning with jumping module
 │ ├── pinn_train.py # PINN training
 │ ├── test.py # model testing
@@ -45,7 +45,7 @@ pip install -r requirements.txt
 ## run steps
 Taking the  **BFG experiment** as an example, the running sequence is as follows:
 
-1.Comparative Learning Network Training
+1.Contrastive learning network training
 ```bash
 python BFG/contrastive_train.py
 ```
@@ -53,7 +53,7 @@ python BFG/contrastive_train.py
 ```bash
 python BFG/pinn_train.py
 ```
-3.test
+3.Model testing
 ```bash
 python BFG/test.py
 ```
@@ -65,5 +65,4 @@ BFG/refactor.m
 The LDG experiment is the same, just run the corresponding script in the ```LDG/``` folder.
 
 ## Contact Information
-If you have any questions about the code or experiment, please contact
-Email:  wangty@dlut.edu.cn. Thanks!
+If there are any questions about the codes and datasets, please don't hesitate to contact us. Thanks!
