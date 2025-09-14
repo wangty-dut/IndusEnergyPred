@@ -24,7 +24,6 @@ def fill_short_zero_intervals(arr):
     in_zero_region = False
     start_idx = -1
 
-    # 遍历数组
     for i in range(n):
         if arr[i] == 0:
             if not in_zero_region:
@@ -204,6 +203,7 @@ if __name__ == "__main__":
 
     df = pd.DataFrame(feature3)
     df.to_excel("./data/three_ldg_data3.xlsx", index=False)
+
 
 
 
