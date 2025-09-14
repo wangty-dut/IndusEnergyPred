@@ -17,7 +17,7 @@ project_root/
 │ ├── contrastive_train.py # contrastive learning with jumping module
 │ ├── pinn_train.py # PINN training
 │ ├── test.py # test
-│ ├── refactor.m # Refactor data from the augmented features
+│ ├── refactor.m # Refactor data based on the augmented sfeatures
 │
 │── LDG/ # LDG Experimental code
 │ ├── data_pretreatment.py
@@ -57,7 +57,7 @@ python BFG/pinn_train.py
 ```bash
 python BFG/test.py
 ```
-4.Data reconstruction and result plotting based on Matlab
+4.Data reconstruction and plotting based on Matlab
 ```bash
 BFG/refactor.m
 ```
