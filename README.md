@@ -16,7 +16,7 @@ project_root/
 │ ├── data_pretreatment.py # data augmentation for feature construction and extraction
 │ ├── contrastive_train.py # contrastive learning with jumping module
 │ ├── pinn_train.py # PINN training
-│ ├── test.py # test
+│ ├── test.py # model testing
 │ ├── refactor.m # Refactor data based on the augmented sfeatures
 │
 │── LDG/ # LDG Experimental code
@@ -24,7 +24,7 @@ project_root/
 │ ├── contrastive_train.py
 │ ├── pinn_train.py
 │ ├── test.py
-│ ├── refactor.m # Refactor data
+│ ├── refactor.m
 │
 │── README.md
 └── requirements.txt
