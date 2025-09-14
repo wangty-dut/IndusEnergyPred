@@ -1,7 +1,7 @@
 # 🔬 An Industrial Energy Prediction Method Integrating Planning Information and Process Correlation Characteristics
 This repository is the code implementation of the paper **"An Industrial Energy Prediction Method Integrating Planning Information and Process Correlation Characteristics"**.
 ## Project Introduction
-This project includes experimental code for two sets of data, **BFG** and **LDG**, which are stored in separate folders.   
+This project includes experimental code for two datasets, **BFG** and **LDG**, which are stored in separate folders.   
 The experiment mainly includes the following modules:
 - **data augmentation**  
 - **Comparative learning and training**  
